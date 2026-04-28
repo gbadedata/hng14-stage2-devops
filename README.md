@@ -94,11 +94,11 @@ docker compose down -v
 
 | Variable | Description | Default |
 |---|---|---|
-| `REDIS_HOST` | Redis service hostname | `redis` |
-| `REDIS_PORT` | Redis port | `6379` |
-| `REDIS_PASSWORD` | Redis password (optional) | empty |
-| `FRONTEND_PORT` | Host port for the frontend | `3000` |
-| `API_URL` | API URL seen by the frontend | `http://api:8000` |
+| REDIS_HOST | Redis service hostname | redis |
+| REDIS_PORT | Redis port | 6379 |
+| REDIS_PASSWORD | Redis password (optional) | empty |
+| FRONTEND_PORT | Host port for the frontend | 3000 |
+| API_URL | API URL seen by the frontend | http://api:8000 |
 
 ## CI/CD Pipeline
 
@@ -106,32 +106,34 @@ The pipeline runs automatically on every push via GitHub Actions with these stag
 
 1. **Lint** — flake8 (Python), eslint (JavaScript), hadolint (Dockerfiles)
 2. **Test** — pytest with coverage report uploaded as artifact
-3. **Build** — all three images built and pushed to a local registry
+3. **Build** — all three images built and pushed to a local registry tagged with git SHA and latest
 4. **Security scan** — Trivy scans all images, SARIF results uploaded as artifact
-5. **Integration test** — full stack started, job submitted and polled to completion
-6. **Deploy** — rolling update to production server (runs on `main` branch only)
+5. **Integration test** — full stack started inside the runner, job submitted and polled to completion, stack torn down
+6. **Deploy** — rolling update to production server, runs on main branch only, skipped gracefully if no server secrets configured
 
 ## Project structure
 
 ```
 .
-├── api/                  # FastAPI backend
+├── api/                    # FastAPI backend
 │   ├── main.py
 │   ├── requirements.txt
 │   ├── Dockerfile
 │   └── tests/
 │       └── test_main.py
-├── worker/               # Job processor
+├── worker/                 # Job processor
 │   ├── worker.py
 │   ├── requirements.txt
 │   └── Dockerfile
-├── frontend/             # Express frontend
+├── frontend/               # Express frontend
 │   ├── app.js
 │   ├── package.json
+│   ├── package-lock.json
 │   ├── Dockerfile
 │   └── views/
 │       └── index.html
 ├── docker-compose.yml
+├── integration-test.sh
 ├── .env.example
 ├── .gitignore
 ├── FIXES.md
