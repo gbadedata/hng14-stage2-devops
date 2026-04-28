@@ -161,7 +161,7 @@ jobs:
             --severity CRITICAL \
             --no-progress \
             localhost:5000/jobpilot-api:${{ github.sha }} || true
-                
+
       - name: Scan API image
         uses: aquasecurity/trivy-action@master
         with:
@@ -254,7 +254,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check deploy secrets
+        id: check_secrets
+        run: |
+          if [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
+            echo "SKIP=true" >> $GITHUB_OUTPUT
+            echo "No deploy secrets configured, skipping deploy"
+          else
+            echo "SKIP=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy via rolling update
+        if: steps.check_secrets.outputs.SKIP == 'false'
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -277,7 +288,6 @@ jobs:
             for SVC in api worker frontend; do
               echo "Updating $SVC..."
               docker compose build $SVC
-
               docker compose up -d --no-deps $SVC
 
               echo "Waiting for $SVC to be healthy..."
@@ -302,3 +312,7 @@ jobs:
 
             echo "Deploy complete."
           ENDSSH
+
+      - name: Deploy skipped
+        if: steps.check_secrets.outputs.SKIP == 'true'
+        run: echo "Deploy skipped - no server secrets configured"
