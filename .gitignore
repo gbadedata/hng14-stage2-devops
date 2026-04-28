@@ -1,0 +1,10 @@
+﻿.env
+*.env
+!.env.example
+__pycache__/
+node_modules/
+*.pyc
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
